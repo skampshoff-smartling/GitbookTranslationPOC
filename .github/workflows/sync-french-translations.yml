@@ -1,0 +1,79 @@
+name: Sync French Translations to FR Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'fr-FR/**'
+
+jobs:
+  sync-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout English repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit to detect changed files
+
+      - name: Get changed files under fr-FR/
+        id: changed
+        run: |
+          # Get list of added/modified files under fr-FR/ in this push
+          git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'fr-FR/**' > /tmp/changed_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_files.txt
+          echo "count=$(wc -l < /tmp/changed_files.txt)" >> $GITHUB_OUTPUT
+
+      - name: Skip if no FR files changed
+        if: steps.changed.outputs.count == '0'
+        run: |
+          echo "No files changed under fr-FR/ — skipping sync."
+
+      - name: Checkout French repo
+        if: steps.changed.outputs.count != '0'
+        uses: actions/checkout@v4
+        with:
+          repository: skampshoff-smartling/GitbookTranslationPOC-French   # <-- update this
+          token: ${{ secrets.FR_REPO_PAT }}
+          path: french-repo
+
+      - name: Copy translated files into French repo
+        if: steps.changed.outputs.count != '0'
+        run: |
+          while IFS= read -r file; do
+            # Strip the leading fr-FR/ prefix to get the target path
+            target="${file#fr-FR/}"
+
+            # Ensure the target directory exists
+            mkdir -p "french-repo/$(dirname "$target")"
+
+            # Copy the file
+            cp "$file" "french-repo/$target"
+            echo "Copied: $file  →  $target"
+          done < /tmp/changed_files.txt
+
+      - name: Commit and push to French repo
+        if: steps.changed.outputs.count != '0'
+        run: |
+          cd french-repo
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          # Only commit if there are actual changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit — files may already be up to date."
+          else
+            # Build a useful commit message referencing the source commit
+            git commit -m "chore(i18n): sync French translations from EN repo
+
+Source commit: ${{ github.sha }}
+Source repo:   ${{ github.repository }}
+Triggered by:  ${{ github.actor }}"
+
+            git push origin main
+            echo "Successfully pushed translations to French repo."
+          fi
