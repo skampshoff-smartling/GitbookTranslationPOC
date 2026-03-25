@@ -68,11 +68,7 @@ jobs:
             echo "No changes to commit — files may already be up to date."
           else
             # Build a useful commit message referencing the source commit
-            git commit -m "chore(i18n): sync French translations from EN repo
-
-Source commit: ${{ github.sha }}
-Source repo:   ${{ github.repository }}
-Triggered by:  ${{ github.actor }}"
+            git commit -m "chore(i18n): sync French translations from EN repo - Source commit: ${{ github.sha }} - Source repo: ${{ github.repository }} - Triggered by: ${{ github.actor }}"
 
             git push origin main
             echo "Successfully pushed translations to French repo."
