@@ -1,6 +1,6 @@
-Table of contents
-=================
+جدول المحتويات
+==============
 
-* [Translation Test](README.md)
+* [اختبار الترجمة](README.md)
 * [رحلة الاختبار ذهابًا وإيابًا](testing-round-trip.md)
 

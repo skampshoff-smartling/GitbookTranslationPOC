@@ -1,6 +1,6 @@
 Table of contents
 =================
 
-* [Translation Test](README.md)
+* [翻訳テスト](README.md)
 * [往復テスト](testing-round-trip.md)
 
